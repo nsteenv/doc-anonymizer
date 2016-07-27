@@ -6,11 +6,11 @@ It's just a simple web project with a nginx proxy and flask web app behind.
 
 ## Requirements
 
-In order to set up the project you'll need to have 
+In order to set up the project you'll need to set-up
 
 * [docker](https://docs.docker.com/)
 * [docker-compose](https://docs.docker.com/compose/)
-* [docker-machine](https://docs.docker.com/machine/) (you should really move to linux though)
+* [docker-machine](https://docs.docker.com/machine/) (you should really move to Linux though)
 
 ## Configuration
 
