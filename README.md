@@ -14,7 +14,7 @@ In order to set up the project you'll need to have
 
 ## Configuration
 
-Feel free to edit the proposed .env file if you want to tune things a bit
+Feel free to edit the sample .env file if you want to tune things a bit (ex: security key or folders)
 
 ## Installation
 
