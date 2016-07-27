@@ -9,4 +9,3 @@ class BaseConfig(object):
     DEBUG = os.environ['DEBUG']
     UPLOAD_FOLDER = os.environ['UPLOAD_FOLDER']
     PROCESSED_FOLDER = os.environ['PROCESSED_FOLDER']
-    PROCESSED_FILE_PREFIX = os.environ['PROCESSED_FILE_PREFIX']
