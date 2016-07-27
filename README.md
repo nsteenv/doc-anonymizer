@@ -1,4 +1,4 @@
-# doc-anonymizer
+# Document anonymizer
 
 This is a small project written in Python to anonymize doc/docx documents for french administrations.
 
@@ -31,4 +31,4 @@ You can then access the web UI at http://127.0.0.1
 ## Team
 
 @gillesa
-@nsteenv
+@nsteenv[https://github.com/nsteenv]
