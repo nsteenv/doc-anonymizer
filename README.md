@@ -30,5 +30,5 @@ You can then access the web UI at http://127.0.0.1
 
 ## Team
 
-@gillesa
-@nsteenv[https://github.com/nsteenv]
+[Armand Gilles](https://github.com/armgilles)
+[Vincent Van Steenbergen](https://github.com/nsteenv)
