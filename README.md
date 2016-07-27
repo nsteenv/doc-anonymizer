@@ -26,6 +26,8 @@ Set up the containers
 
 > docker-compose up -d
 
+## Running
+
 You can then access the web UI at http://127.0.0.1
 
 ## Team
