@@ -12,5 +12,5 @@ requests==2.9.1
 beautifulsoup4==4.4.1
 numpy==1.11.0
 xgboost==0.4a30
-#matplotlib==1.5.1 really needed?
-seaborn==0.7.1
+#matplotlib==1.5.1
+#seaborn==0.7.1
