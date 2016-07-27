@@ -3,25 +3,17 @@
 {% block content %}
 
 <div class="text-center">
-  <h1>Welcome!</h1>
+  <h1>Document anonymizer!</h1>
+  <p>Select the document you want to anonymize to get a clean version.</p>
 </div>
 
 <br>
 
-<form action="/" method="POST">
+<form action="/" method="POST" enctype=multipart/form-data>
   <div class="form-group">
-    <input name="text" class="form-control input-lg" type="text" placeholder="Enter a message" required>
+    <input type=file name=file accept=".doc,.docx" />
   </div>
-  <input type="submit" class="btn btn-primary btn-lg btn-block" value="Submit">
+  <input type="submit" class="btn btn-primary btn-lg btn-block" value="Anonymize">
 </form>
-
-<br>
-<hr>
-
-<div>
-  {% for post in posts %}
-    <h4 class="well"><strong>{{post.text}}</strong> - <em>{{post.date_posted.strftime('%Y-%m-%d')}}</em></h4>
-  {% endfor %}
-</div>
 
 {% endblock %}
