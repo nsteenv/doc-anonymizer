@@ -5,6 +5,7 @@ Created on Tue Jul 26 10:21:42 2016
 @author: babou
 """
 
+import sys
 import pandas as pd
 from docx import Document
 import pickle
@@ -164,12 +165,33 @@ def process_data(data):
     data = data.fillna(-1)
     return data
 
-def prediction(data, model):
+def get_prediction(data, model):
     proba = model.predict(xgb.DMatrix(data[model.feature_names], missing=-1), ntree_limit=model.best_ntree_limit)
     prediction = [1. if y_cont > 0.5 else 0. for y_cont in proba] # binaryzing your output
-    return prediction, proba
+    return prediction, proba     
     
+def get_html_log(txt, log_file, to_anonymise_dict):
+    """
+    Return html page with color for warning name
+    """
+    
+    html_code = '''<!DOCTYPE html><html><head>
+        <meta charset="utf-8" />
+        <title>Titre</title>
+    </head><body>'''
+    
+    txt = unicode(txt.decode('utf-8'))
+    #red color --> warning
+    for hightlight_word in log_file[log_file.warning == 1].word:
+        txt = txt.replace(hightlight_word, '''<font color="red"> '''+hightlight_word+'''</font>''')
         
+    # Green color --> Ok
+    for change_word in to_anonymise_dict.values():
+        txt = txt.replace(" " + change_word + " ", '''<span style="background-color:#00ff00"> '''+" " +change_word+" "+'''</span>''')
+        
+    html_code = html_code + txt
+    html_code = html_code + "</p></body></html>"
+    return html_code.encode('utf-8')
 
 ###
 
@@ -216,98 +238,61 @@ f = open('model/stem_no_type_0.932578972183.model')
 model = pickle.load(f)
 f.close()
 
+def anonymize_doc(filePath):
+    """
+    Anonymize the document for the given filePath
+    """
+    word_df = reading_docx(filePath)
+            
+    my_data = process_data(word_df)
 
-word_df = reading_docx('/Users/babou/github/paris_fellows/input/JF00152334_example.docx')
-        
-my_data = process_data(word_df)
+    prediction, proba = get_prediction(my_data, model)
+    my_data['prediction'] = prediction
+    my_data['proba'] = proba
 
-prediction, proba = prediction(my_data, model)
-my_data['prediction'] = prediction
-my_data['proba'] = proba
+    # List of word positif
+    word_to_anonymse_list = my_data[my_data.prediction==1].word.unique().tolist()
 
-# List of word positif
-word_to_anonymse_list = my_data[my_data.prediction==1].word.unique().tolist()
+    to_anonymise_dict = {} 
+    for i in range(0, len(word_to_anonymse_list)):
+        to_anonymise_dict[word_to_anonymse_list[i]] = anymizer_list[i]
+                        
+    my_data['anonyme_word'] = my_data['word']
+    my_data.loc[my_data['prediction'] == 1, 'anonyme_word'] = my_data['word'].apply(lambda x: to_anonymise_dict.get(x, x))
 
-to_anonymise_dict = {} 
-for i in range(0, len(word_to_anonymse_list)):
-    to_anonymise_dict[word_to_anonymse_list[i]] = anymizer_list[i]
-                       
-my_data['anonyme_word'] = my_data['word']
-my_data.loc[my_data['prediction'] == 1, 'anonyme_word'] = my_data['word'].apply(lambda x: to_anonymise_dict.get(x, x))
-
-# Si prediction ==1 et prediction n-1 == 1 alors on enlève la ligne sinon ==> M. X Y for Firstname / Name 
-my_data['prediction_1b'] = my_data['prediction'].shift(1)
+    # Si prediction ==1 et prediction n-1 == 1 alors on enlève la ligne sinon ==> M. X Y for Firstname / Name 
+    my_data['prediction_1b'] = my_data['prediction'].shift(1)
 
 
-index_to_delete = my_data[(my_data['prediction'] == 1) & 
-                            (my_data['prediction_1b'] == 1)].index.tolist()
+    index_to_delete = my_data[(my_data['prediction'] == 1) & 
+                                (my_data['prediction_1b'] == 1)].index.tolist()
                             
-my_data = my_data.drop(index_to_delete)
+    my_data = my_data.drop(index_to_delete)
 
-print "Word to Anonymise :" 
-for word in word_to_anonymse_list:
-    print "--> " + str(word.encode('utf-8'))
+    print "Word to Anonymise :" 
+    for word in word_to_anonymse_list:
+        print "--> " + str(word.encode('utf-8'))
     
-# Write log file :
-def get_proba_mean(x):
-    """
-    Return mean proba of word
-    """
-    return my_data[my_data.word == x].proba.mean()
-    
-def get_proba_min(x):
-    """
-    Return mean proba of word
-    """
-    return my_data[my_data.word == x].proba.min()
-    
-    
+    log_file = pd.DataFrame(word_to_anonymse_list, columns=['word'])
+    log_file['mean_proba_positif'] = log_file['word'].apply(lambda x: my_data[my_data.word == x].proba.mean())
+    log_file['min_proba'] = log_file['word'].apply(lambda x: my_data[my_data.word == x].proba.min())
+    log_file['warning'] = 0
+    log_file.loc[log_file.min_proba < 0.5, 'warning'] = 1
 
+    output = " ".join([word.encode('utf-8') for word in my_data.anonyme_word.tolist()])
+
+    name_ouput = my_data.doc_name.unique()[0]
+    text_file = open("output/"+name_ouput+".txt", "w")
+    text_file.write(output)
+    text_file.close()
+
+    log_file.to_csv("output/"+name_ouput+"_log.csv", index=False, encoding='utf-8')
+            
+    output_html = get_html_log(output, log_file, to_anonymise_dict)
+
+    html_file = open("output/"+name_ouput+".html", "w")
+    html_file.write(output_html)
+    html_file.close()
     
-log_file = pd.DataFrame(word_to_anonymse_list, columns=['word'])
-log_file['mean_proba_positif'] = log_file['word'].apply(lambda x: get_proba_mean(x))
-log_file['min_proba'] = log_file['word'].apply(lambda x: get_proba_min(x))
-log_file['warning'] = 0
-log_file.loc[log_file.min_proba < 0.5, 'warning'] = 1
-
-
-output = " ".join([word.encode('utf-8') for word in my_data.anonyme_word.tolist()])
-
-name_ouput = my_data.doc_name.unique()[0]
-text_file = open("output/"+name_ouput+".txt", "w")
-text_file.write(output)
-text_file.close()
-
-log_file.to_csv("output/"+name_ouput+"_log.csv", index=False, encoding='utf-8')
-
-def get_html_log(txt, log_file, to_anonymise_dict):
-    """
-    Return html page with color for warning name
-    """
-    
-    html_code = '''<!DOCTYPE html><html><head>
-        <meta charset="utf-8" />
-        <title>Titre</title>
-    </head><body>'''
-    
-    txt = unicode(txt.decode('utf-8'))
-    #red color --> warning
-    for hightlight_word in log_file[log_file.warning == 1].word:
-        txt = txt.replace(hightlight_word, '''<font color="red"> '''+hightlight_word+'''</font>''')
-        
-    # Green color --> Ok
-    for change_word in to_anonymise_dict.values():
-        txt = txt.replace(" " + change_word + " ", '''<span style="background-color:#00ff00"> '''+" " +change_word+" "+'''</span>''')
-        
-    html_code = html_code + txt
-    html_code = html_code + "</p></body></html>"
-    return html_code.encode('utf-8')
-    
-output_html = get_html_log(output, log_file, to_anonymise_dict)
-
-html_file = open("output/"+name_ouput+".html", "w")
-html_file.write(output_html)
-html_file.close()
-        
-        
-    
+if __name__ == '__main__':
+    anonymize_doc(sys.argv[1])
