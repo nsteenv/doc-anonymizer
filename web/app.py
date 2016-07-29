@@ -35,13 +35,12 @@ def upload_file():
             filename = secure_filename(file.filename)
             uploadPath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(uploadPath)
-            anonymize_doc(uploadPath)
-            # file.save(os.path.join(app.config['PROCESSED_FOLDER'], filename))
-            return redirect(url_for('processed_file', filename=filename))
+            output_html = anonymize_doc(uploadPath)
+            return render_template('output.html', fileName=filename, output=output_html)
     return render_template('index.html')
 
-@app.route('/processed/<filename>')
-def processed_file(filename):
+@app.route('/anonymized/<filename>')
+def anonymized_file(filename):
     return send_from_directory(app.config['PROCESSED_FOLDER'], filename + ".html")
 
 if __name__ == '__main__':

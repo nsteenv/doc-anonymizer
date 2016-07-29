@@ -174,12 +174,6 @@ def get_html_log(txt, log_file, to_anonymise_dict):
     """
     Return html page with color for warning name
     """
-    
-    html_code = '''<!DOCTYPE html><html><head>
-        <meta charset="utf-8" />
-        <title>Titre</title>
-    </head><body>'''
-    
     txt = unicode(txt.decode('utf-8'))
     #red color --> warning
     for hightlight_word in log_file[log_file.warning == 1].word:
@@ -188,10 +182,8 @@ def get_html_log(txt, log_file, to_anonymise_dict):
     # Green color --> Ok
     for change_word in to_anonymise_dict.values():
         txt = txt.replace(" " + change_word + " ", '''<span style="background-color:#00ff00"> '''+" " +change_word+" "+'''</span>''')
-        
-    html_code = html_code + txt
-    html_code = html_code + "</p></body></html>"
-    return html_code.encode('utf-8')
+
+    return txt
 
 ###
 
@@ -290,9 +282,7 @@ def anonymize_doc(filePath):
             
     output_html = get_html_log(output, log_file, to_anonymise_dict)
 
-    html_file = open("output/"+name_ouput+".html", "w")
-    html_file.write(output_html)
-    html_file.close()
+    return output_html
     
 if __name__ == '__main__':
     anonymize_doc(sys.argv[1])
