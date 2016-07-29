@@ -36,7 +36,7 @@ def upload_file():
             uploadPath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(uploadPath)
             anonymize_doc(uploadPath)
-            file.save(os.path.join(app.config['PROCESSED_FOLDER'], filename))
+            # file.save(os.path.join(app.config['PROCESSED_FOLDER'], filename))
             return redirect(url_for('processed_file', filename=filename))
     return render_template('index.html')
 
