@@ -4,6 +4,7 @@ import os
 from flask import Flask, request, redirect, url_for, render_template, send_from_directory
 from config import BaseConfig
 from werkzeug.utils import secure_filename
+from get_prediction import anonymize_doc
 
 
 app = Flask(__name__)
@@ -32,17 +33,16 @@ def upload_file():
             return redirect(request.url)
         if file:
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # @TODO 
-            # process the file here
-            # then save it to app.config['PROCESSED_FOLDER']
+            uploadPath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(uploadPath)
+            anonymize_doc(uploadPath)
             file.save(os.path.join(app.config['PROCESSED_FOLDER'], filename))
             return redirect(url_for('processed_file', filename=filename))
     return render_template('index.html')
 
 @app.route('/processed/<filename>')
 def processed_file(filename):
-    return send_from_directory(app.config['PROCESSED_FOLDER'], filename)
+    return send_from_directory(app.config['PROCESSED_FOLDER'], filename + ".html")
 
 if __name__ == '__main__':
     app.run()
